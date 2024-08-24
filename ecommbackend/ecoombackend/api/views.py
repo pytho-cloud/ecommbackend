@@ -29,20 +29,6 @@ collection = db["data"]
 
 # Create your views here.
 
-@api_view(["GET"])
-def index(request):
-
-    data = {
-        "name" : "inverse" ,
-        "number" : 2
-    }
-
-    collection.insert_one(data)
-    
-
-    return Response({
-        "message": "Insert data sucessfully"
-    })
 
 
     
