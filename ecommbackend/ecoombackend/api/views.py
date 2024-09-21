@@ -9,7 +9,7 @@ from django.urls import reverse
 from django.core.mail import send_mail
 from django.conf import settings
 from .models import MyUserModel
-from .serializer import MyUserModelSerializer
+from .serializer import MyUserModelSerializer  ,MyUserModelSerializerData ,UserDataSerilizer
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.contrib.auth.tokens import default_token_generator as token_generator
 from .models import ImageModel
@@ -36,6 +36,7 @@ class ProductAPIView(APIView):
 
 
     def get(self,request,pk=None):
+        print("this is api is working0--------" )
 
 
         single_product_name = request.GET.get('product_name')
@@ -87,7 +88,7 @@ class ProductAPIView(APIView):
             if not queryset:
                 return Response({"error": "No products found for this category"}, status=status.HTTP_404_NOT_FOUND)
             for item in queryset:
-                item["_id"] = str(item["_id"])  # Convert ObjectId to string
+                item["_id"] = str(item["_id"]) 
 
             response_data = {
                 "products": queryset,                "brands": queryset_for_brands
@@ -122,6 +123,27 @@ class ProductAPIView(APIView):
         
         
 
+
+#Home Page Items Api 
+
+class HomeProductView(APIView):
+
+   
+
+    def get(self, request):
+
+        queryset =list(collection.find().limit(3))
+        print("this is api is working" )
+        for item in queryset:
+            item["_id"] =  str(item["_id"])
+
+        response_data = {
+                "products": queryset,
+                
+            }
+        
+        return Response(response_data,status=status.HTTP_200_OK)
+        
 
 # User Authentication Api 
 class RegisterView(APIView):
@@ -184,6 +206,8 @@ class VerifyEmailView(APIView):
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+
+
 # Login View 
 class LoginView(APIView):
 
@@ -206,3 +230,68 @@ class LoginView(APIView):
 
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+class UserDataApiView(APIView):
+
+    def get(self, request):
+        try:
+            
+            print(request.query_params)
+            username = request.query_params.get('username')
+            email = request.query_params.get('email')
+
+            if not username or not email:
+                return Response({'error': 'Missing username or email'}, status=status.HTTP_400_BAD_REQUEST)
+
+            user = MyUserModel.objects.filter(username=username, email=email).first()
+            
+            if user is not None:
+                user_serialier = MyUserModelSerializerData(user)
+           
+                return Response({'data': 'Successfully Logged In!', "username": username, "data": user_serialier.data}, status=status.HTTP_200_OK)
+            else:
+                return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+
+
+    def post(self, request):
+            try:
+                # Extract the relevant fields to identify the user
+                username = request.data.get('username')
+                email = request.data.get('email')
+                print(request.data,"ddddddddddddd")
+
+                if not username or not email:
+                    return Response({'error': 'Missing username or email'}, status=status.HTTP_400_BAD_REQUEST)
+
+                # Fetch the existing user
+                user = MyUserModel.objects.filter(username=username, email=email).first()
+
+                if user:
+                    
+                    userdata_serializer = UserDataSerilizer(user, data=request.data, partial=True)  
+
+                  
+                    if userdata_serializer.is_valid():
+                        userdata_serializer.save()  # Save the updated user data
+                        return Response({
+                            'message': 'User data updated successfully',
+                            'data': userdata_serializer.data
+                        }, status=status.HTTP_200_OK)
+                    else:
+                        # Return validation errors if any
+                        return Response({
+                            'errors': userdata_serializer.errors
+                        }, status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    # Return error if user does not exist
+                    return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+            except Exception as e:
+                return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)

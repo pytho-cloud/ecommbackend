@@ -23,7 +23,7 @@ class ProductSerializer(serializers.Serializer):
 class MyUserModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = MyUserModel
-        fields = ['username', 'email', 'password']
+        fields = ['username', 'email', 'password','phone','alternate_phone']
 
     def create(self, validated_data):
         validated_data['password'] = make_password(validated_data['password'])
@@ -31,8 +31,22 @@ class MyUserModelSerializer(serializers.ModelSerializer):
         return user
 
 class UserAddressModelSerializer(serializers.ModelSerializer):
-    user = MyUserModelSerializer(read_only=True)
-    
     class Meta:
         model = UserAddressModel
         fields = ['user', 'address', 'last_update']
+
+# Serializer for MyUserModel with nested address data
+class MyUserModelSerializerData(serializers.ModelSerializer):
+     # Nested serializer for addresses
+
+    class Meta:
+        model = MyUserModel
+        fields = '__all__'
+
+
+class UserDataSerilizer(serializers.ModelSerializer):
+     # Nested serializer for addresses
+
+    class Meta:
+        model = MyUserModel
+        fields = ["username" ,"email","phone" , "alternate_phone"]

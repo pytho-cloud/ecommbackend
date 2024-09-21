@@ -19,6 +19,8 @@ class MyUserModel(models.Model):
     password = models.CharField(max_length=255)
     is_verified = models.BooleanField(default=False)
     date = models.DateField(auto_created=True,null=True)
+    phone = models.CharField(max_length=10,null=True,blank=True)
+    alternate_phone = models.CharField(max_length=10,null=True,blank=True)
     last_login = models.DateTimeField(null=True, blank=True) 
 
     def __str__(self) -> str:
@@ -26,7 +28,7 @@ class MyUserModel(models.Model):
     
 class UserAddressModel(models.Model):
 
-    user = models.ForeignKey(MyUserModel,on_delete=models.SET_NULL,null=True)
+    user = models.ForeignKey(MyUserModel, on_delete=models.SET_NULL, null=True, related_name='addresses')
     address = models.TextField()
     last_update = models.DateField()
 
