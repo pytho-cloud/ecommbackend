@@ -6,7 +6,7 @@ from django.conf import settings
 from django.utils.encoding import force_bytes
 from django.contrib.auth.tokens import default_token_generator
 from django.urls import reverse
-from .models import MyUserModel , UserAddressModel
+from .models import MyUserModel , UserAddressModel ,UserAddressModelData
 from django.contrib.auth.hashers import make_password
 
 
@@ -32,8 +32,8 @@ class MyUserModelSerializer(serializers.ModelSerializer):
 
 class UserAddressModelSerializer(serializers.ModelSerializer):
     class Meta:
-        model = UserAddressModel
-        fields = ['user', 'address', 'last_update']
+        model = UserAddressModelData
+        fields = "__all__"
 
 # Serializer for MyUserModel with nested address data
 class MyUserModelSerializerData(serializers.ModelSerializer):
@@ -49,4 +49,4 @@ class UserDataSerilizer(serializers.ModelSerializer):
 
     class Meta:
         model = MyUserModel
-        fields = ["username" ,"email","phone" , "alternate_phone"]
+        fields = ["name" ,"email","phone" , "alternate_phone","username"]

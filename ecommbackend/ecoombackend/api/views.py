@@ -8,8 +8,8 @@ import json
 from django.urls import reverse
 from django.core.mail import send_mail
 from django.conf import settings
-from .models import MyUserModel
-from .serializer import MyUserModelSerializer  ,MyUserModelSerializerData ,UserDataSerilizer
+from .models import MyUserModel ,UserAddressModelData
+from .serializer import MyUserModelSerializer  ,MyUserModelSerializerData ,UserDataSerilizer ,UserAddressModelSerializer
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.contrib.auth.tokens import default_token_generator as token_generator
 from .models import ImageModel
@@ -218,15 +218,15 @@ class LoginView(APIView):
             data = request.data
             username = data.get('username')
             password = data.get('password')
-            print(username)
-            user = MyUserModel.objects.get(username=username)
+            print(username,"data is coming ")
+            user = MyUserModel.objects.get(email=username)
 
             if not check_password(password, user.password):
                 return Response({'message': 'Password is Incorrect!'}, status=status.HTTP_400_BAD_REQUEST)
 
             user.last_login = timezone.now()
             user.save(update_fields=['last_login'])
-            return Response({'message': 'SuccessFully Login!',"username": username,"status" : status.HTTP_200_OK}, status=status.HTTP_200_OK)
+            return Response({'message': 'SuccessFully Login!',"username": user.name ,"email" : user.email,"status" : status.HTTP_200_OK}, status=status.HTTP_200_OK)
 
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -242,14 +242,15 @@ class UserDataApiView(APIView):
             print(request.query_params)
             username = request.query_params.get('username')
             email = request.query_params.get('email')
-
+            print(username ,email,"---------------------data")
             if not username or not email:
                 return Response({'error': 'Missing username or email'}, status=status.HTTP_400_BAD_REQUEST)
-
-            user = MyUserModel.objects.filter(username=username, email=email).first()
             
+            user = MyUserModel.objects.filter( email=email,name=username).first()
+            print(user,"-------")
             if user is not None:
                 user_serialier = MyUserModelSerializerData(user)
+                print(user_serialier.data,"ssss")
            
                 return Response({'data': 'Successfully Logged In!', "username": username, "data": user_serialier.data}, status=status.HTTP_200_OK)
             else:
@@ -263,20 +264,23 @@ class UserDataApiView(APIView):
     def post(self, request):
             try:
                 # Extract the relevant fields to identify the user
-                username = request.data.get('username')
+                name = request.data.get('name')
                 email = request.data.get('email')
                 print(request.data,"ddddddddddddd")
+                # print(name ,"user is coming ")
 
-                if not username or not email:
+                if not name or not email:
                     return Response({'error': 'Missing username or email'}, status=status.HTTP_400_BAD_REQUEST)
 
                 # Fetch the existing user
-                user = MyUserModel.objects.filter(username=username, email=email).first()
-
+                user = MyUserModel.objects.filter(name=name, email=email).first()
+                print(user,"my user")
+                if user == None :
+                    print("-----nonor")
                 if user:
-                    
+                    print("user is not nonw")
                     userdata_serializer = UserDataSerilizer(user, data=request.data, partial=True)  
-
+                   
                   
                     if userdata_serializer.is_valid():
                         userdata_serializer.save()  # Save the updated user data
@@ -295,3 +299,76 @@ class UserDataApiView(APIView):
 
             except Exception as e:
                 return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            
+
+
+
+
+
+
+
+class UserDataForAddressApiView(APIView):
+
+    def get(self, request):
+        try:
+            
+            
+            address = request.query_params.get('address')
+            email = request.query_params.get('email')
+            print("this is email " , email)
+            if not email:
+                return Response({'error': 'Missing username or email'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            user = UserAddressModelData.objects.filter(user_email = email)
+
+            if user is not None:
+                user_serialier = UserAddressModelSerializer(user,many=True)
+                print(user_serialier.data,"this is mydata after serialized ")
+           
+                return Response({'data': 'Successfully Logged In!', "data": user_serialier.data}, status=status.HTTP_200_OK)
+            else:
+                return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+
+
+    def post(self, request):
+            try:
+        
+                username = request.data.get('username')
+                email = request.data.get('email')
+                if not username or not email:
+                    return Response({'error': 'Missing username or email'}, status=status.HTTP_400_BAD_REQUEST)
+
+                user = MyUserModel.objects.filter(username=username, email=email).first()
+                print(user,"my user")
+                if user == None :
+                    ...
+                if user:
+                    print("user is not nonw")
+                    userdata_serializer = UserDataSerilizer(user, data=request.data, partial=True)  
+                   
+                  
+                    if userdata_serializer.is_valid():
+                        userdata_serializer.save()  # Save the updated user data
+                        return Response({
+                            'message': 'User data updated successfully',
+                            'data': userdata_serializer.data
+                        }, status=status.HTTP_200_OK)
+                    else:
+                    
+                        return Response({
+                            'errors': userdata_serializer.errors
+                        }, status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    # Return error if user does not exist
+                    return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+            except Exception as e:
+                return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            
+
+
+

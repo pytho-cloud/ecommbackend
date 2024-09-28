@@ -15,6 +15,7 @@ class ImageModel(models.Model):
 class MyUserModel(models.Model):
 
     username = models.CharField(max_length=255)
+    name = models.CharField(max_length=255,null=True,blank=True)
     email = models.EmailField()
     password = models.CharField(max_length=255)
     is_verified = models.BooleanField(default=False)
@@ -38,4 +39,12 @@ class UserAddressModel(models.Model):
 
 
 
+class UserAddressModelData(models.Model):
 
+    user_email = models.EmailField()
+    address = models.TextField()
+    last_update = models.DateField()
+
+
+    def __str__(self) -> str:
+        return self.address 
