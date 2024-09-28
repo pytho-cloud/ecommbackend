@@ -30,10 +30,6 @@ class MyUserModelSerializer(serializers.ModelSerializer):
         user = MyUserModel.objects.create(**validated_data)
         return user
 
-class UserAddressModelSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UserAddressModelData
-        fields = "__all__"
 
 # Serializer for MyUserModel with nested address data
 class MyUserModelSerializerData(serializers.ModelSerializer):
@@ -50,3 +46,10 @@ class UserDataSerilizer(serializers.ModelSerializer):
     class Meta:
         model = MyUserModel
         fields = ["name" ,"email","phone" , "alternate_phone","username"]
+
+
+class UserAddressSerializer(serializers.ModelSerializer):
+
+    class Meta :
+        model = UserAddressModelData
+        fields = "__all__"

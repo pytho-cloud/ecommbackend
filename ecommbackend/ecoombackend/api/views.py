@@ -8,8 +8,8 @@ import json
 from django.urls import reverse
 from django.core.mail import send_mail
 from django.conf import settings
-from .models import MyUserModel ,UserAddressModelData
-from .serializer import MyUserModelSerializer  ,MyUserModelSerializerData ,UserDataSerilizer ,UserAddressModelSerializer
+from .models import MyUserModel ,UserAddressModelData ,UserAddressModel
+from .serializer import MyUserModelSerializer  ,MyUserModelSerializerData ,UserDataSerilizer ,UserAddressSerializer 
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.contrib.auth.tokens import default_token_generator as token_generator
 from .models import ImageModel
@@ -322,7 +322,7 @@ class UserDataForAddressApiView(APIView):
             user = UserAddressModelData.objects.filter(user_email = email)
 
             if user is not None:
-                user_serialier = UserAddressModelSerializer(user,many=True)
+                user_serialier = UserAddressSerializer(user,many=True)
                 print(user_serialier.data,"this is mydata after serialized ")
            
                 return Response({'data': 'Successfully Logged In!', "data": user_serialier.data}, status=status.HTTP_200_OK)
@@ -335,40 +335,46 @@ class UserDataForAddressApiView(APIView):
 
 
     def post(self, request):
-            try:
+        try:
+            print("This is my data:", request.data)
+            
+            address = request.data.get('address')
+            email = request.data.get('email')
         
-                username = request.data.get('username')
-                email = request.data.get('email')
-                if not username or not email:
-                    return Response({'error': 'Missing username or email'}, status=status.HTTP_400_BAD_REQUEST)
+            if not email:
+                return Response({'error': 'Missing email'}, status=status.HTTP_400_BAD_REQUEST)
 
-                user = MyUserModel.objects.filter(username=username, email=email).first()
-                print(user,"my user")
-                if user == None :
-                    ...
-                if user:
-                    print("user is not nonw")
-                    userdata_serializer = UserDataSerilizer(user, data=request.data, partial=True)  
-                   
-                  
-                    if userdata_serializer.is_valid():
-                        userdata_serializer.save()  # Save the updated user data
-                        return Response({
-                            'message': 'User data updated successfully',
-                            'data': userdata_serializer.data
-                        }, status=status.HTTP_200_OK)
-                    else:
-                    
-                        return Response({
-                            'errors': userdata_serializer.errors
-                        }, status=status.HTTP_400_BAD_REQUEST)
+          
+            user_address = UserAddressModelData(user_email=email, address=address)
+            user_address.save() 
+            return Response({
+                "message": "Address successfully added."
+            }, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+    def delete(self, request):
+            try:
+                email = request.data.get('email')
+                id = request.data.get('id')
+
+                if not email or not id:
+                    return Response({'error': 'Missing email or id'}, status=status.HTTP_400_BAD_REQUEST)
+
+                # Filter and delete the address for the user
+                user_address = UserAddressModelData.objects.filter( id= id,user_email=email)
+
+                if user_address.exists():
+                    user_address.delete()
+                    return Response({"message": "Address successfully deleted."}, status=status.HTTP_204_NO_CONTENT)
                 else:
-                    # Return error if user does not exist
-                    return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+                    return Response({'error': 'Address not found for this user'}, status=status.HTTP_404_NOT_FOUND)
 
             except Exception as e:
-                return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-            
+                return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 
 
