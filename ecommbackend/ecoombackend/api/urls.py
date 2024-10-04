@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.urls import path ,include
 from .views import *
-from .views import ProductAPIView ,HomeProductView ,UserDataApiView ,UserDataForAddressApiView
+from .views import ProductAPIView ,HomeProductView ,UserDataApiView ,UserDataForAddressApiView,SaveWishListView
 from rest_framework.routers import DefaultRouter
 
 
@@ -16,5 +16,8 @@ urlpatterns = [
     path('verify-email/<uidb64>', VerifyEmailView.as_view(), name='verify_email'),
     path('login/',LoginView.as_view(),name = "login"),
      path('user/get_user_details/',UserDataApiView.as_view(),name = "get_user_details"),
-      path('user/get_user_address/',UserDataForAddressApiView.as_view(),name = "get_user_address")
+      path('user/get_user_address/',UserDataForAddressApiView.as_view(),name = "get_user_address"),
+      path('user/add_user_wish_list/',SaveWishListView.as_view(),name = "add_user_wish_list"),
+       path('user/add_user_wish_list/<str:pk>/', SaveWishListView.as_view(), name="add_user_wish_list_with_pk"),
+
 ]

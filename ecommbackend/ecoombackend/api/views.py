@@ -17,12 +17,15 @@ from rest_framework import status
 from django.contrib.auth.hashers import check_password
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
+from datetime import datetime
 
 
 client = MongoClient("localhost" ,27017)
 db = client["data"]
 
 collection = db["data"]
+
+collection_user = db["user"]
 
 
 
@@ -378,3 +381,19 @@ class UserDataForAddressApiView(APIView):
 
 
 
+
+
+class SaveWishListView(APIView):
+
+    def get(self, request,pk):
+        print(pk)
+        data = list(collection_user.find({"username": pk},{"_id" : 0}))
+        return Response({"data": data}, status=status.HTTP_200_OK) 
+
+    def post(self, request):
+        data = request.data
+        try:
+            collection_user.insert_one(data)
+            return Response({"status" :status.HTTP_201_CREATED})
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
