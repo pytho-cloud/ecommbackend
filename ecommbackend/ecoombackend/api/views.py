@@ -18,6 +18,7 @@ from django.contrib.auth.hashers import check_password
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from datetime import datetime
+from bson import ObjectId
 
 
 client = MongoClient("localhost" ,27017)
@@ -186,7 +187,7 @@ class RegisterView(APIView):
                 
             }, status=status.HTTP_201_CREATED)
 
-        # Return validation errors if serializer is invalid
+    
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -386,8 +387,11 @@ class UserDataForAddressApiView(APIView):
 class SaveWishListView(APIView):
 
     def get(self, request,pk):
-        print(pk)
-        data = list(collection_user.find({"username": pk},{"_id" : 0}))
+     
+        data = list(collection_user.find({"username": pk}))
+        for item in data:
+            item['_id'] = str(item['_id']) 
+        
         return Response({"data": data}, status=status.HTTP_200_OK) 
 
     def post(self, request):
@@ -395,5 +399,16 @@ class SaveWishListView(APIView):
         try:
             collection_user.insert_one(data)
             return Response({"status" :status.HTTP_201_CREATED})
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+    def delete(self, request, pk):
+        try:
+            result = collection_user.delete_one({"_id": ObjectId(pk)})
+            
+            return Response({"status": status.HTTP_200_OK, "message": "Deleted successfully."})
+            
+            
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -18,6 +18,7 @@ urlpatterns = [
      path('user/get_user_details/',UserDataApiView.as_view(),name = "get_user_details"),
       path('user/get_user_address/',UserDataForAddressApiView.as_view(),name = "get_user_address"),
       path('user/add_user_wish_list/',SaveWishListView.as_view(),name = "add_user_wish_list"),
-       path('user/add_user_wish_list/<str:pk>/', SaveWishListView.as_view(), name="add_user_wish_list_with_pk"),
+       path('user/add_user_wish_list/<str:pk>', SaveWishListView.as_view(), name="add_user_wish_list_with_pk"),
+        path('user/delete_user_wish_list/<str:pk>/', SaveWishListView.as_view(), name="delete_user_wish_list"),
 
 ]
