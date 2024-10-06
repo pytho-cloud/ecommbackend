@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.urls import path ,include
 from .views import *
-from .views import ProductAPIView ,HomeProductView ,UserDataApiView ,UserDataForAddressApiView,SaveWishListView
+
 from rest_framework.routers import DefaultRouter
 
 
@@ -20,5 +20,6 @@ urlpatterns = [
       path('user/add_user_wish_list/',SaveWishListView.as_view(),name = "add_user_wish_list"),
        path('user/add_user_wish_list/<str:pk>', SaveWishListView.as_view(), name="add_user_wish_list_with_pk"),
         path('user/delete_user_wish_list/<str:pk>/', SaveWishListView.as_view(), name="delete_user_wish_list"),
+        path('user/user_checkout/<str:pk>/', CheckoutView.as_view(), name="user_checkout"),
 
 ]

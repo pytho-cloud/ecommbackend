@@ -9,7 +9,7 @@ from django.urls import reverse
 from django.core.mail import send_mail
 from django.conf import settings
 from .models import MyUserModel ,UserAddressModelData ,UserAddressModel
-from .serializer import MyUserModelSerializer  ,MyUserModelSerializerData ,UserDataSerilizer ,UserAddressSerializer 
+from .serializer import MyUserModelSerializer  ,MyUserModelSerializerData ,UserDataSerilizer ,UserAddressSerializer  ,UserAddressForCheckoutListSerializer
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.contrib.auth.tokens import default_token_generator as token_generator
 from .models import ImageModel
@@ -412,3 +412,61 @@ class SaveWishListView(APIView):
             
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from bson import ObjectId
+from django.shortcuts import get_object_or_404
+from .models import UserAddressModelData  # Make sure this is your correct model
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from django.shortcuts import get_object_or_404
+from bson import ObjectId
+from .models import MyUserModel, UserAddressModelData
+
+class CheckoutView(APIView):
+
+    def get(self, request, pk):
+        exp = str(pk)
+        print(exp, "key is coming")
+        
+        # Extracting the product ID and user email from the primary key
+        exp_object_id = exp.split('_')[0]  
+        user_email = exp.split('_')[2]    
+
+        # Fetch the product from MongoDB using the product ID
+        product = list(collection_user.find({'_id': ObjectId(exp_object_id)}))
+        if not product:
+            return Response({"error": "Product not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Convert ObjectId to string for JSON serialization
+        for item in product:
+            item['_id'] = str(item['_id'])  
+
+        # Fetch the user from the relational database using Django ORM
+        try:
+            user = MyUserModel.objects.get(email=user_email)
+        except MyUserModel.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Fetch all addresses associated with this user's email
+        user_addresses = UserAddressModelData.objects.filter(user_email=user_email)
+        serializer_address = UserAddressForCheckoutListSerializer(user_addresses, many=True)
+
+        address_list  = [item['address'] for item in serializer_address.data]
+
+     
+        # Preparing response data
+        response_data = {
+            "product": product,
+            "phone":user.phone,
+            "name": user.username,
+            'email' : user.email,
+            "addresses": address_list
+          
+        }
+        return Response({"data": response_data}, status=status.HTTP_200_OK)

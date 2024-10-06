@@ -53,3 +53,10 @@ class UserAddressSerializer(serializers.ModelSerializer):
     class Meta :
         model = UserAddressModelData
         fields = "__all__"
+
+
+class UserAddressForCheckoutListSerializer(serializers.ModelSerializer):
+
+    class Meta :
+        model = UserAddressModelData
+        fields = ["address"]
